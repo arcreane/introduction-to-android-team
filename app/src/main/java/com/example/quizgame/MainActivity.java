@@ -14,13 +14,13 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -48,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
 
     Button startButton;
     Button restartButton;
+
+    RadioGroup difficultyRadioGroup;
+    String selectedDifficulty = "medium"; // Default difficulty
 
     Integer score = 0;
 
@@ -85,17 +88,37 @@ public class MainActivity extends AppCompatActivity {
         answerButton4 = findViewById(R.id.answerButton4);
         startButton = findViewById(R.id.startButton);
         restartButton = findViewById(R.id.restartButton);
+        difficultyRadioGroup = findViewById(R.id.difficultyRadioGroup);
 
         Collections.addAll(answerButtons, answerButton1, answerButton2, answerButton3, answerButton4);
 
         // Set the background image for the first page
         rootLayout.setBackgroundResource(R.drawable.background_image);
 
-        // Start button click listener
+        // Difficulty selection listener
+        difficultyRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.easyRadioButton) {
+                selectedDifficulty = "easy";
+            } else if (checkedId == R.id.mediumRadioButton) {
+                selectedDifficulty = "medium";
+            } else if (checkedId == R.id.hardRadioButton) {
+                selectedDifficulty = "hard";
+            }
+        });
+
+
         startButton.setOnClickListener(view -> {
+            // Log the selected difficulty
+            Log.d("MainActivity", "Selected Difficulty: " + selectedDifficulty);
+
+            // Hide the RadioGroup
+            difficultyRadioGroup.setVisibility(View.GONE);
+
+            // Start the game
             fetchQuestions();
             startButton.setVisibility(View.INVISIBLE);
         });
+
     }
 
     private void fetchQuestions() {
@@ -103,9 +126,9 @@ public class MainActivity extends AppCompatActivity {
         TriviaApiService apiService = RetrofitClient.getClient().create(TriviaApiService.class);
 
         Call<TriviaResponse> call = apiService.getQuestions(
-                NUM_OF_QUESTIONS_PER_GAME, // Fetch 50 questions
-                "medium", // Difficulty (you can experiment with "easy" or "hard" too)
-                "multiple" // Question type
+                NUM_OF_QUESTIONS_PER_GAME, // Fetch 10 questions
+                selectedDifficulty,       // Selected difficulty
+                "multiple"               // Question type
         );
 
         call.enqueue(new Callback<TriviaResponse>() {
@@ -134,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
     private void startGame() {
         if (questions == null || questions.isEmpty()) {
             Log.e("MainActivity", "Questions list is null or empty!");
@@ -155,9 +177,6 @@ public class MainActivity extends AppCompatActivity {
         rootLayout.setBackgroundResource(0); // Remove the background image for the quiz screen
         displayQuestion(questions.get(questionCounter));
     }
-
-
-
 
     private void restartGame() {
         restartButton.setVisibility(View.INVISIBLE);

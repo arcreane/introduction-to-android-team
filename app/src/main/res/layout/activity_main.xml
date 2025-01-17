@@ -22,6 +22,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.022" />
 
+
     <TextView
         android:id="@+id/questionText"
         android:layout_width="0dp"
@@ -45,6 +46,7 @@
         app:layout_constraintBottom_toTopOf="@+id/frameLayoutBottom"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
+
 
         <Button
             android:id="@+id/answerButton1"
@@ -71,6 +73,7 @@
             android:visibility="invisible" />
 
     </LinearLayout>
+
 
     <LinearLayout
         android:id="@+id/frameLayoutBottom"
@@ -105,6 +108,44 @@
             android:visibility="invisible" />
 
     </LinearLayout>
+
+    <RadioGroup
+        android:id="@+id/difficultyRadioGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toTopOf="@id/startButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <RadioButton
+            android:id="@+id/easyRadioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Easy"
+            android:fontFamily="@font/montserrat_bold"
+            android:textColor="#FFFFFF" />
+
+        <RadioButton
+            android:id="@+id/mediumRadioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Medium"
+            android:fontFamily="@font/montserrat_bold"
+            android:textColor="#FFFFFF" />
+
+        <RadioButton
+            android:id="@+id/hardRadioButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hard"
+            android:fontFamily="@font/montserrat_bold"
+            android:textColor="#FFFFFF" />
+    </RadioGroup>
+
 
     <Button
         android:id="@+id/startButton"
