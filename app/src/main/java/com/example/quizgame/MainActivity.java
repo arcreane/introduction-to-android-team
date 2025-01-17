@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -20,6 +21,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -88,19 +93,71 @@ public class MainActivity extends AppCompatActivity {
 
         // Start button click listener
         startButton.setOnClickListener(view -> {
-            startGame();
+            fetchQuestions();
             startButton.setVisibility(View.INVISIBLE);
         });
     }
 
-    private void startGame() {
-        // Remove the background image for the quiz screen
-        rootLayout.setBackgroundResource(0);
+    private void fetchQuestions() {
+        Log.d("MainActivity", "Fetching questions...");
+        TriviaApiService apiService = RetrofitClient.getClient().create(TriviaApiService.class);
 
-        makeQuestions();
+        Call<TriviaResponse> call = apiService.getQuestions(
+                NUM_OF_QUESTIONS_PER_GAME, // Fetch 50 questions
+                "medium", // Difficulty (you can experiment with "easy" or "hard" too)
+                "multiple" // Question type
+        );
+
+        call.enqueue(new Callback<TriviaResponse>() {
+            @Override
+            public void onResponse(Call<TriviaResponse> call, Response<TriviaResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    questions = response.body().getResults();
+
+                    if (questions == null || questions.isEmpty()) {
+                        Log.e("MainActivity", "No questions fetched.");
+                        return;
+                    }
+
+                    Log.d("MainActivity", "Questions fetched: " + questions.size());
+                    Collections.shuffle(questions); // Shuffle for variety
+                    startGame();
+                } else {
+                    Log.e("MainActivity", "Failed to fetch questions. Response: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TriviaResponse> call, Throwable t) {
+                Log.e("MainActivity", "API request failed", t);
+            }
+        });
+    }
+
+
+    private void startGame() {
+        if (questions == null || questions.isEmpty()) {
+            Log.e("MainActivity", "Questions list is null or empty!");
+            return;
+        }
+
+        // Shuffle the list and pick the first 10 unique questions
         Collections.shuffle(questions);
+        List<Question> gameQuestions = questions.subList(0, Math.min(NUM_OF_QUESTIONS_PER_GAME, questions.size()));
+
+        Log.d("MainActivity", "Game questions: " + gameQuestions);
+
+        // Reset the game state with the new question set
+        questions = new ArrayList<>(gameQuestions);
+        questionCounter = 0;
+        score = 0;
+
+        rootLayout.setBackgroundResource(0); // Remove the background image for the quiz screen
         displayQuestion(questions.get(questionCounter));
     }
+
+
+
 
     private void restartGame() {
         restartButton.setVisibility(View.INVISIBLE);
@@ -110,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
         score = 0;
         questionCounter = 0;
         Collections.shuffle(questions);
-
+        fetchQuestions();
         displayQuestion(questions.get(questionCounter));
     }
 
@@ -120,25 +177,22 @@ public class MainActivity extends AppCompatActivity {
         questionText.setText(question.question);
         questionText.setVisibility(View.VISIBLE);
 
-        int randNum = new Random().nextInt(answerButtons.size());
-        int i = 0;
+        List<String> allAnswers = new ArrayList<>(question.incorrect_answers);
+        allAnswers.add(question.correct_answer);
+        Collections.shuffle(allAnswers);
 
-        for (Button button : answerButtons) {
+        for (int i = 0; i < answerButtons.size(); i++) {
+            Button button = answerButtons.get(i);
             button.setVisibility(View.VISIBLE);
+            button.setText(allAnswers.get(i));
 
-            if (i == randNum) {
-                button.setText(question.correctAnswer);
+            if (allAnswers.get(i).equals(question.correct_answer)) {
                 setButtonFeatures(button, green, 1, true);
             } else {
                 setButtonFeatures(button, red, 0, false);
                 wrongButtons.add(button);
             }
-            i++;
         }
-
-        wrongButtons.get(0).setText(question.wrongAnswer1);
-        wrongButtons.get(1).setText(question.wrongAnswer2);
-        wrongButtons.get(2).setText(question.wrongAnswer3);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -207,88 +261,5 @@ public class MainActivity extends AppCompatActivity {
         } else {
             vibrator.vibrate(200);
         }
-    }
-
-    // Function to create unique Question objects and add them to a list called questions
-    private void makeQuestions() {
-        Question q1 = new Question("Why don't skeletons fight each other?",
-                "They don't have the guts", "They are too polite", "They love to dance", "They are always asleep");
-        questions.add(q1);
-
-        Question q2 = new Question("What is the largest planet in our solar system?",
-                "Jupiter", "Saturn", "Earth", "Mars");
-        questions.add(q2);
-
-        Question q3 = new Question("Why did the scarecrow win an award?",
-                "He was outstanding in his field", "He scared the most crows", "He was really stylish", "He told great jokes");
-        questions.add(q3);
-
-        Question q4 = new Question("Who painted the ceiling of the Sistine Chapel?",
-                "Michelangelo", "Leonardo da Vinci", "Raphael", "Donatello");
-        questions.add(q4);
-
-        Question q5 = new Question("What do you call a fish wearing a bowtie?",
-                "Sofishticated", "Dapper", "Classy Catch", "Fin-tastic");
-        questions.add(q5);
-
-        Question q6 = new Question("What is the smallest country in the world?",
-                "Vatican City", "Monaco", "San Marino", "Liechtenstein");
-        questions.add(q6);
-
-        Question q7 = new Question("Why did the tomato turn red?",
-                "Because it saw the salad dressing!", "It was shy", "It was sunburnt", "It blushed");
-        questions.add(q7);
-
-        Question q8 = new Question("What is the capital of Australia?",
-                "Canberra", "Sydney", "Melbourne", "Perth");
-        questions.add(q8);
-
-        Question q9 = new Question("Why do bees hum?",
-                "Because they don’t know the words!", "To attract flowers", "To communicate", "To stay calm");
-        questions.add(q9);
-
-        Question q10 = new Question("What is the tallest mountain in the world?",
-                "Mount Everest", "K2", "Kangchenjunga", "Lhotse");
-        questions.add(q10);
-
-        Question q11 = new Question("Why did the bicycle fall over?",
-                "It was two tired", "It hit a rock", "It lost its balance", "It saw a ghost");
-        questions.add(q11);
-
-        Question q12 = new Question("What is the longest river in the world?",
-                "Nile", "Amazon", "Yangtze", "Mississippi");
-        questions.add(q12);
-
-        Question q13 = new Question("Why was the math book sad?",
-                "It had too many problems", "It got wet", "It was torn", "It was lonely");
-        questions.add(q13);
-
-        Question q14 = new Question("Which element has the chemical symbol 'O'?",
-                "Oxygen", "Osmium", "Oganesson", "Oxide");
-        questions.add(q14);
-
-        Question q15 = new Question("Why did the golfer bring an extra pair of pants?",
-                "In case he got a hole in one", "It was cold", "They were stylish", "For good luck");
-        questions.add(q15);
-
-        Question q16 = new Question("What is the largest ocean on Earth?",
-                "Pacific Ocean", "Atlantic Ocean", "Indian Ocean", "Arctic Ocean");
-        questions.add(q16);
-
-        Question q17 = new Question("Why are ghosts bad liars?",
-                "Because you can see right through them", "They get scared", "They stutter", "They forget their lines");
-        questions.add(q17);
-
-        Question q18 = new Question("What is the boiling point of water at sea level?",
-                "100°C", "90°C", "80°C", "70°C");
-        questions.add(q18);
-
-        Question q19 = new Question("Why did the computer go to the doctor?",
-                "It caught a virus", "It froze", "It needed a reboot", "It was overheating");
-        questions.add(q19);
-
-        Question q20 = new Question("Who was the first President of the United States?",
-                "George Washington", "Abraham Lincoln", "Thomas Jefferson", "John Adams");
-        questions.add(q20);
     }
 }

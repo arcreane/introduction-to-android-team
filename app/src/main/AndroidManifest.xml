@@ -3,7 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.quizgame">
 
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- Required for network calls -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required for vibration functionality -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
