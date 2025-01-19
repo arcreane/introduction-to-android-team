@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import android.content.Intent;
-
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -71,13 +69,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // Initialize the leaderboard button
-        Button leaderboardButton = findViewById(R.id.leaderboardButton);
-        leaderboardButton.setOnClickListener(view -> {
-            Intent intent = new Intent(MainActivity.this, LeaderboardActivity.class);
-            startActivity(intent);
-        });
 
         // Initialize root layout
         rootLayout = findViewById(R.id.rootLayout);
@@ -268,11 +259,13 @@ public class MainActivity extends AppCompatActivity {
         counterText.setVisibility(View.INVISIBLE);
         questionText.setVisibility(View.INVISIBLE);
 
+        // Display score message
         String endInfo = "Quiz finished! \n" + username + ", you got " + score + "/" + NUM_OF_QUESTIONS_PER_GAME +
                 "\ncorrect answers.";
         endingText.setText(endInfo);
         endingText.setVisibility(View.VISIBLE);
 
+        // Display motivational comment
         if (score > 7) {
             commentText.setText("Amazingly done!");
         } else if (score > 3) {
@@ -282,10 +275,7 @@ public class MainActivity extends AppCompatActivity {
         }
         commentText.setVisibility(View.VISIBLE);
 
-        // Save the score
-        DatabaseHelper db = new DatabaseHelper(this);
-        db.insertScore(username, score);
-
+        // Show restart button
         restartButton.setVisibility(View.VISIBLE);
         restartButton.setOnClickListener(view -> restartGame());
     }
