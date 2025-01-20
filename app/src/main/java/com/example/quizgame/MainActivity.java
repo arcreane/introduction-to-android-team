@@ -6,7 +6,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.Build;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -29,7 +29,7 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
-    static int NUM_OF_QUESTIONS_PER_GAME = 10;
+    static final int NUM_OF_QUESTIONS_PER_GAME = 10;
 
     private ConstraintLayout rootLayout;
 
@@ -58,29 +58,24 @@ public class MainActivity extends AppCompatActivity {
     private final String buttonColor = "#C3E1D8";
 
     private DatabaseHelper dbHelper;
+    private MediaPlayer wrongAnswerSound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize database
+        // Initialize database and sound
         dbHelper = new DatabaseHelper(this);
+        wrongAnswerSound = MediaPlayer.create(this, R.raw.wrong_answer); // Add your sound file in res/raw
 
         // Initialize views
         initializeViews();
 
-        // Set up difficulty selection listener
+        // Set up listeners
         setupDifficultyListener();
-
-        // Set up start button listener
         setupStartButtonListener();
-
-        // Set up leaderboard button listener
-        leaderboardButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, LeaderboardActivity.class);
-            startActivity(intent);
-        });
+        setupLeaderboardButtonListener();
     }
 
     private void initializeViews() {
@@ -136,6 +131,13 @@ public class MainActivity extends AppCompatActivity {
 
             fetchQuestions();
             startButton.setVisibility(View.INVISIBLE);
+        });
+    }
+
+    private void setupLeaderboardButtonListener() {
+        leaderboardButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, LeaderboardActivity.class);
+            startActivity(intent);
         });
     }
 
@@ -209,7 +211,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         button.setOnClickListener(v -> {
-            if (isCorrect) {
+            if (!isCorrect) {
+                playWrongAnswerSound();
+            } else {
                 score++;
             }
             questionCounter++;
@@ -219,6 +223,12 @@ public class MainActivity extends AppCompatActivity {
                 endGame();
             }
         });
+    }
+
+    private void playWrongAnswerSound() {
+        if (wrongAnswerSound != null) {
+            wrongAnswerSound.start();
+        }
     }
 
     private void endGame() {
@@ -233,5 +243,14 @@ public class MainActivity extends AppCompatActivity {
         dbHelper.insertUser(username, score);
         restartButton.setVisibility(View.VISIBLE);
         restartButton.setOnClickListener(v -> recreate());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (wrongAnswerSound != null) {
+            wrongAnswerSound.release();
+            wrongAnswerSound = null;
+        }
     }
 }
